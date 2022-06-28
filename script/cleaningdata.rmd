@@ -31,38 +31,43 @@ dgpie_partenaire_df <- df.list[[1]]
 dgpie_projet_df <- df.list[[2]]
 dos_partenaire_df <- df.list[[3]]
 dos_projet_df <- df.list[[4]]
-
-
+discipline_code_df <- df.list[[5]]
 
 ```
 
 # cleaning_data 
 
+## filter general call & create a discipline variable 
+
+```{r echo=FALSE}
+dos_projet_df <- dos_projet_df %>%
+  mutate(CES = str_extract(Projet.Code_Decision_ANR, "CE[:digit:]{2}")) %>%
+  left_join(discipline_code, by = 'CES') %>%
+  filter(!is.na(CES))
+```
+
+
 ## institution 
 
 'Institution' needs to clean. There is first of all acronyms and typo mistakes. Second, we need to aggregate local institutions such as 'CNRS Paris' and 'CNRS Lyon'
 
-
 We first want to apply basic cleaning such as removing punctions, upper case and so on.
 
-```{r}
+```{r echo=FALSE}
 dos_partenaire_df <- dos_partenaire_df %>% 
-  filter(Projet.Partenaire.Est_coordinateur == 'TRUE') %>%
+  right_join(dos_projet_df) %>% #keep only general call
+  filter(Projet.Partenaire.Est_coordinateur == 'TRUE') %>% #keep only project leader 
   mutate(institution = tolower(Projet.Partenaire.Nom_organisme)) %>% #rename and remove uppercase 
-  mutate(institution = str_remove(institution, "[:punct:]")) %>% #remove punction
-  mutate(institution = case_when(str_detect(institution, "") ~ "", 
-                                 str_detect(institution, "") ~ "",
-                                 )
-         )
+  mutate(institution = str_remove(institution, "[:punct:]")) %>% #remove punction 
+  mutate(institution = case_when(str_detect(institution, "^aix(-| |)marseille") ~ "Aix Marseille",
+                                 #str_detect(institution, "")
+                                 #str_detect(institution, "") ~ "",
+                                 TRUE ~ dos_partenaire_df$institution)
+         ) %>% select(institution) 
+
 ```
 
-
-```{r}
-regex <- "(.*)(CE[:d])(.*)"
-str_extract(data, "")
-```
-
-
+Calculate distance between character vectors and merge lines that matchh 
 
 ```{r echo=FALSE}
 df_save <- dos_partenaire_df[0,]
