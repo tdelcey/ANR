@@ -41,9 +41,23 @@ discipline_code_df <- df.list[[5]]
 
 ```{r echo=FALSE}
 dos_projet_df <- dos_projet_df %>%
-  mutate(CES = str_extract(Projet.Code_Decision_ANR, "CE[:digit:]{2}")) %>%
-  left_join(discipline_code, by = 'CES') %>%
-  filter(!is.na(CES))
+  mutate(CES = str_extract(Projet.Code_Decision_ANR, "CE[:digit:]{2}")) %>% left_join(discipline_code, by = 'CES')
+
+
+```
+
+Find the social science code  
+
+```{r}
+  test <- dos_projet_df %>%
+  filter(!is.na(CES)) 
+
+test <- test %>%
+  mutate(social_science = case_when(str_detect(test$CES, "CE(26|27|28|41)") ~ "SSH",
+                                    TRUE ~ "NO SSH"
+    )) %>%
+  group_by(social_science) %>%
+  count()
 ```
 
 
@@ -54,6 +68,9 @@ dos_projet_df <- dos_projet_df %>%
 We first want to apply basic cleaning such as removing punctions, upper case and so on.
 
 ```{r echo=FALSE}
+
+#UNIFINISH 
+
 dos_partenaire_df <- dos_partenaire_df %>% 
   right_join(dos_projet_df) %>% #keep only general call
   filter(Projet.Partenaire.Est_coordinateur == 'TRUE') %>% #keep only project leader 
@@ -78,11 +95,92 @@ for (i in (1:nrow(dos_partenaire_df))){
     df_save <- df_save[!duplicated(df_save),]
     print(i)
 }
+```
 
+
+```{r echo=FALSE}
+library(sotu)
+library(tidytext)
+library(SnowballC)
+library(ldatuning)
+
+
+summary <- dos_projet_df %>%
+  filter(!is.na(Projet.Resume.Anglais)) %>% #filter projet with an english summary
+  select(c(Projet.Code_Decision_ANR, Projet.Resume.Anglais, AAP.Edition)) %>%
+  rename(text = Projet.Resume.Anglais,
+         id = Projet.Code_Decision_ANR,
+         year = AAP.Edition) %>% #renames variables 
+  unnest_tokens(output = token, input = text) %>% # create token
+  #anti_join(get_stopwords(), by = c("token" = "word")) %>% # stop word
+  mutate(token = wordStem(token, language = "en")) #stemming
+
+```
+
+Let's run a Dynanmic Topic Model 
+
+```{r echo=FALSE}
+
+summary_dtm <- summary %>% 
+  filter(str_length(token) > 1) %>% 
+  count(id, year, token) %>% 
+  group_by(token) %>% 
+  filter(n() < 95) %>% # remove tokens that appear in more than 95 documents (i.e., years) WHY ?
+  cast_dtm(document = year, term = token, value = n)
+```
+
+```{r}
+library(ldatuning)
+
+determine_k <- FindTopicsNumber(
+  summary_dtm,
+  topics = seq(from = 2, to = 30, by = 1),
+  metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
+  method = "Gibbs",
+  control = list(seed = 77),
+  mc.cores = 16L,
+  verbose = TRUE
+)
+
+FindTopicsNumber_plot(determine_k)
 
 
 ```
+
+```{r eval=FALSE}
+library(topicmodels)
+library(broom)
+
+summary_dtm_k13 <- LDA(summary_dtm, k = 13, control = list(seed = 77))
+
+summary_dtm_k13_tidied <- tidy(summary_dtm_k13)
+
+#write_rds(sotu_lda_k16, "lda_16.rds")
 ```
+
+```{r, echo=FALSE}
+summary_dtm_k13_tidied %>% glimpse()
+```
+
+```{r}
+top_terms_k13 <- summary_dtm_k13_tidied %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 5, with_ties = FALSE) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+```
+
+```{r}
+top_terms_k13 %>%
+  mutate(topic = factor(topic),
+         term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = topic)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  scale_x_reordered() +
+  facet_wrap(~topic, scales = "free", ncol = 4) +
+  coord_flip()
+```
+
 
 
 
