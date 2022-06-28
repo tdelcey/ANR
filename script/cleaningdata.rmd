@@ -9,7 +9,77 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+-   [1 What is this script for?](#what-is-this-script-for)
+-   [2 Loading packages, paths and data](#loading-packages-paths-and-data)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# 1 What is this script for?
+
+
+# 2 Loading packages, paths and
+    data
+    
+```{r}
+
+source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
+
+?list.files
+
+file.list <- paste0(data_path, list.files(path = data_path, pattern='*.xlsx'))
+df.list <- lapply(file.list, read_excel)
+
+dgpie_partenaire_df <- df.list[[1]]
+dgpie_projet_df <- df.list[[2]]
+dos_partenaire_df <- df.list[[3]]
+dos_projet_df <- df.list[[4]]
+
+
+
+```
+
+# cleaning_data 
+
+## institution 
+
+'Institution' needs to clean. There is first of all acronyms and typo mistakes. Second, we need to aggregate local institutions such as 'CNRS Paris' and 'CNRS Lyon'
+
+
+We first want to apply basic cleaning such as removing punctions, upper case and so on.
+
+```{r}
+dos_partenaire_df <- dos_partenaire_df %>% 
+  filter(Projet.Partenaire.Est_coordinateur == 'TRUE') %>%
+  mutate(institution = tolower(Projet.Partenaire.Nom_organisme)) %>% #rename and remove uppercase 
+  mutate(institution = str_remove(institution, "[:punct:]")) %>% #remove punction
+  mutate(institution = case_when(str_detect(institution, "") ~ "", 
+                                 str_detect(institution, "") ~ "",
+                                 )
+         )
+```
+
+
+```{r}
+regex <- "(.*)(CE[:d])(.*)"
+str_extract(data, "")
+```
+
+
+
+```{r echo=FALSE}
+df_save <- dos_partenaire_df[0,]
+for (i in (1:nrow(dos_partenaire_df))){
+   df_match <- dos_partenaire_df[agrep(dos_partenaire_df$institution[[i]], dos_partenaire_df$institution, max.distance = 0.05),]
+   df_match <- df_match %>% mutate(institution = institution[[1]])
+   df_save <- rbind(df_save, df_match)
+    df_save <- df_save[!duplicated(df_save),]
+    print(i)
+}
+
+
+
+```
+```
+
+
+
+
 

@@ -1,0 +1,4 @@
+
+1. gender: to create a variable with the gender. Dictionary-based, machine-learning. 
+2. disciplines: create a variable with the disciplines. Use to CES label. 
+3. University: dirty data, huge work for cleaning this data 
