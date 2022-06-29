@@ -1,0 +1,63 @@
+---
+title: "cleaning data"
+author: "Thomas Delcey"
+date: '2022-06-27'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+-   [1 What is this script for?](#1 What-is-this-script-for)
+-   [2 Loading packages, paths and data](#2 Loading-packages-paths-and-data)
+-   [3 Cleaning data](#3 Cleaning data)
+
+
+#1 What is this script for?
+
+
+#2 Loading packages, paths and
+    data
+    
+```{r, echo=FALSE}
+
+source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
+
+```
+
+```{r}
+
+dos_partenaire_df <- readRDS(paste0(data_path, "dos_partenaire_df.RDS"))
+
+```
+
+#3 Frequency 
+
+```{r}
+
+dos_project_freq_df <- dos_projet_df %>%
+  group_by(CES) %>% # I group the data by their CES category, every function I am gonna use will apply by group
+  summarise(n = n(), #I count the number of lines by group
+            grant = sum(Projet.Aide_allouee, 
+                        )) %>% #I sum the fund received by group
+  mutate(freq = n / sum(n)*100,
+         freq_grant = grant / sum(grant)*100
+         ) %>%
+  group_by(social_science) %>%
+  bind_rows(summarise(., 
+                      across(where(is.numeric), sum),
+                      across(where(is.character), ~"Total", .groups = "keep")))
+  #I calculate the percentage of ANR and fund by CES
+  bind_rows(summarise(.,
+                      across(where(is.numeric), sum),
+                      across(where(is.character), ~"Total")))
+
+
+```
+
+
+
+
+
+
