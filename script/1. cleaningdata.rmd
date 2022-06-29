@@ -41,11 +41,26 @@ discipline_code_df <- df.list[[5]]
 
 #3 Cleaning_data 
 
+## renaming variables
+
+```{r}
+dos_projet_df <- dos_projet_df %>%
+  rename(text = Projet.Resume.Anglais, 
+         year = AAP.Edition,
+         id = Projet.Code_Decision_ANR,
+         ) 
+
+dos_partenaire_df <- dos_partenaire_df %>%
+  rename(name = Projet.Partenaire.Responsable_scientifique.Prenom,
+         lastname = Projet.Partenaire.Responsable_scientifique.Nom) 
+```
+
+
 ##3.1 Filter general call & create a discipline variable 
 
 ```{r echo=FALSE results = "hide"}
 dos_projet_df <- dos_projet_df %>%
-  mutate(CES = str_extract(Projet.Code_Decision_ANR, "CE[:digit:]{2}")) %>% left_join(discipline_code_df, by = 'CES') %>%
+  mutate(CES = str_extract(id, "CE[:digit:]{2}")) %>% left_join(discipline_code_df, by = 'CES') %>%
   mutate(generique = case_when(str_detect(Programme.Acronyme, "^AAPG") ~ 1, 
                                TRUE ~ 0
                               )
@@ -107,7 +122,12 @@ library("genderdata")
 
 ##cleaning the prenom variable
 
-#accent
+#loading the CLEAN data 
+
+dos_partenaire_df <- readRDS(paste0(data_path, "dos_partenaire_df.RDS"))
+
+
+##function of Etienne for saving 
 Unaccent <- function(text) {
   text <- gsub("['`^~\"]", " ", text)
   text <- iconv(text, to="ASCII//TRANSLIT//IGNORE")
@@ -115,9 +135,12 @@ Unaccent <- function(text) {
   return(text)
 }
 
-#managing double names
-test <- dos_partenaire_df %>%
-  rename(name = Projet.Partenaire.Responsable_scientifique.Prenom) %>%
+##removing accent 
+dos_partenaire_df<- dos_partenaire_df %>%
+  mutate(name = unaccent(name))
+
+#keep only the first_name
+dos_partenaire_df <- dos_partenaire_df %>%
   mutate(name = str_extract(name, "[a-zA-Z]+"))
 
 
@@ -126,17 +149,14 @@ test <- dos_partenaire_df %>%
 name <- as.character(dos_partenaire_df$name)
 gender_df <- gender(name) 
 
-df_name <- as.data.frame(name) 
-
-test <- dos_partenaire_df %>%
+dos_partenaire_df <- dos_partenaire_df %>%
   left_join(select(gender_df, c(name, gender))) %>%
-  distinct() %>% 
-  filter(is.na(gender)) %>%
-  select(gender, name)
-  
+  distinct() 
 
-test <- dos_partenaire_df %>%
-  count(is.na(gender))
+dos_partenaire_df %>%
+  group_by(gender) %>%
+  summarise(n = n()) %>%
+  mutate('%' = n/sum(n)*100)
 
  
 ```
