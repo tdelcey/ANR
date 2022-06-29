@@ -58,18 +58,18 @@ summary <- dos_projet_df %>%
   #mutate(token = wordStem(token, language = "en")) #stemming
 ```
 
-#DTM 
+#3 DTM 
 
 ```{r}
 summary_dtm <- summary %>% 
-   filter(str_length(token) 1) %>% 
+   filter(str_length(token) > 1) %>% 
    count(id, year, token) %>% 
    group_by(token) %>% 
    filter(n() < 95) %>% # remove tokens that appear in more than 95 documents (i.e., years) WHY ?
    cast_dtm(document = year, term = token, value = n)
 ```
 
-#Finding k
+#4 Finding k
 ```{r}
 
 library(ldatuning)
@@ -84,15 +84,20 @@ determine_k <- FindTopicsNumber(
    verbose = TRUE
  )
 ```
-#Topic Model
+
+#5 Topic Model
 ```{r}
 library(topicmodels)
 library(broom)
 
 summary_dtm_k13 <- LDA(summary_dtm, k = 20, control = list(seed = 77))
+saveRDS(summary_dtm_k13, pasteO(data_path, "summary_dtm_k13"))
+
+summary_dtm_k13 <- readRDS(paste0(data_path, "summary_dtm_k13"))
 
 summary_dtm_k13_tidied <- tidy(summary_dtm_k13)
 
+saveRDS(pasteO(data_path, "summary_dtm_k13"))
 #write_rds(sotu_lda_k16, "lda_16.rds")
 summary_dtm_k13_tidied %>% glimpse()
 

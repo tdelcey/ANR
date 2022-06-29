@@ -9,20 +9,24 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
--   [1 What is this script for?](#what-is-this-script-for)
--   [2 Loading packages, paths and data](#loading-packages-paths-and-data)
+-   [1 What is this script for?](#1 What-is-this-script-for)
+-   [2 Loading packages, paths and data](#2 Loading-packages-paths-and-data)
+-   [3 Cleaning data](#3 Cleaning data)
 
-# 1 What is this script for?
+
+#1 What is this script for?
 
 
-# 2 Loading packages, paths and
+#2 Loading packages, paths and
     data
     
-```{r}
+```{r, echo=FALSE}
 
 source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
 
-?list.files
+```
+
+```{r}
 
 file.list <- paste0(data_path, list.files(path = data_path, pattern='*.xlsx'))
 df.list <- lapply(file.list, read_excel)
@@ -35,14 +39,27 @@ discipline_code_df <- df.list[[5]]
 
 ```
 
-# cleaning_data 
+#3 Cleaning_data 
 
-## filter general call & create a discipline variable 
+##3.1 Filter general call & create a discipline variable 
 
 ```{r echo=FALSE}
 dos_projet_df <- dos_projet_df %>%
-  mutate(CES = str_extract(Projet.Code_Decision_ANR, "CE[:digit:]{2}")) %>% left_join(discipline_code_df, by = 'CES')
+  mutate(CES = str_extract(Projet.Code_Decision_ANR, "CE[:digit:]{2}")) %>% left_join(discipline_code_df, by = 'CES') %>%
+  mutate(generique = case_when(str_detect(Programme.Acronyme, "^AAPG") ~ 1, 
+                               TRUE ~ 0
+                              )
+        ) %>%
+  mutate(social_science = case_when(str_detect(CES, "CE(26|27|28|41)") ~ 1, 
+                               TRUE ~ 0
+                              )
+        )
 
+dos_projet_df %>%
+  group_by(CES) %>%
+  summarise(n = n(),
+            grant = sum(Projet.Aide_allouee)) %>%
+  mutate(freq = n / sum(n)*100)
 
 ```
 
@@ -61,7 +78,7 @@ test <- test %>%
 ```
 
 
-## institution 
+## 3.2 Institution 
 
 'Institution' needs to clean. There is first of all acronyms and typo mistakes. Second, we need to aggregate local institutions such as 'CNRS Paris' and 'CNRS Lyon'
 
@@ -97,8 +114,26 @@ for (i in (1:nrow(dos_partenaire_df))){
 }
 ```
 
+##3.3 create a gender variable 
 
+```{r, echo=FALSE}
+library("gender")
+library("genderdata")
 
+name <- dos_partenaire_df$Projet.Partenaire.Responsable_scientifique.Prenom
+
+gender_df <- gender(Projet.Partenaire.Responsable_scientifique.Prenom, years = c(1950,1990))
+
+dos_partenaire_df <- dos_partenaire_df %>%
+  rename(name = Projet.Partenaire.Responsable_scientifique.Prenom) %>%
+  left_join(select(gender_df, c(name, gender))) %>%
+  distinct()
+
+test <- dos_partenaire_df %>%
+  count(is.na(gender))
+
+ 
+```
 
 
 
