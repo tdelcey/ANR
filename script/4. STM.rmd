@@ -27,14 +27,44 @@ knitr::opts_chunk$set(echo = TRUE)
 source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
 
 dos_partenaire_df <- readRDS(paste0(data_path, "dos_partenaire_df.RDS"))
+dos_projet_df <- readRDS(paste0(data_path, "dos_projet_df.RDS"))
 
+
+projet <- dos_projet_df %>% 
+  rename(text = Projet.Resume.Anglais)
 
 ```
 
 #3 Featurization
 
-#4 Finding k
+```{r}
+
+library(stm)
+processed <- textProcessor(projet$text, metadata = projet %>% select(-text))
+
+ plotRemoved(processed$documents, lower.thresh = seq(1, 50, by = 2))
+
+prepped_docs <- prepDocuments(processed$documents, processed$vocab, processed$meta, lower.thresh = 3, upper.thresh = 95)
+```
+```{r}
+plotRemoved(processed$documents, lower.thresh = seq(1, 50, by = 2))
+
+```
+```{r}
+prepped_docs <- prepDocuments(processed$documents, processed$vocab, processed$meta, lower.thresh = 3, upper.thresh = 95)
+```
+
+```{r}
+sotu_content_fit <- stm(documents = prepped_docs$documents, 
+                        vocab = prepped_docs$vocab, 
+                        K = 16, 
+                        prevalence = ~party + s(year),
+                        content = ~party,
+                        max.em.its = 75, 
+                        data = prepped_docs$meta, 
+                        init.type = "Spectral",
+                        verbose = FALSE)
+```
 
 #5 Topic Model
 
-```

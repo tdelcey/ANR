@@ -40,7 +40,7 @@ dos_project_freq_df <- dos_projet_df %>%
   group_by(CES) %>% # I group the data by their CES category, every function I am gonna use will apply by group
   summarise(n = n(), #I count the number of lines by group
             grant = sum(Projet.Aide_allouee, 
-                        )) %>% #I sum the fund received by group
+                        ) ) %>% #I sum the fund received by group
   mutate(freq = n / sum(n)*100,
          freq_grant = grant / sum(grant)*100
          ) %>%

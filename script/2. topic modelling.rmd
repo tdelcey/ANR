@@ -47,16 +47,17 @@ library(tidytext)
 library(SnowballC) 
 library(ldatuning)
 
+
+
 summary <- dos_projet_df %>%
    filter(!is.na(Projet.Resume.Anglais)) %>% #filter projet with an english summary
    select(c(Projet.Code_Decision_ANR, Projet.Resume.Anglais, AAP.Edition)) %>%
    rename(text = Projet.Resume.Anglais,
           id = Projet.Code_Decision_ANR,
           year = AAP.Edition) %>% #renames variables 
-   unnest_tokens(output = token, input = text) 
- #%>% # create token
-  #anti_join(get_stopwords(), by = c("token" = "word")) %>% # stop word
-  #mutate(token = wordStem(token, language = "en")) #stemming
+   unnest_tokens(output = token, input = text) %>%
+  anti_join(get_stopwords(), by = c("token" = "word")) %>% # stop word
+  mutate(token = wordStem(token, language = "en")) #stemming
 ```
 
 #3 DTM 
@@ -66,7 +67,7 @@ summary_dtm <- summary %>%
    filter(str_length(token) > 1) %>% 
    count(id, year, token) %>% 
    group_by(token) %>% 
-   filter(n() < 95) %>% # remove tokens that appear in more than 95 documents (i.e., years) WHY ?
+   #filter(n() < 95) %>% # remove tokens that appear in more than 95 documents (i.e., years) WHY ?
    cast_dtm(document = year, term = token, value = n)
 ```
 
@@ -117,4 +118,4 @@ top_terms_k13 %>%
    facet_wrap(~topic, scales = "free", ncol = 4) +
    coord_flip()
 
-```
+ ```

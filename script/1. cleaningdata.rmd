@@ -55,6 +55,8 @@ dos_projet_df <- dos_projet_df %>%
                               )
         )
 
+saveRDS(dos_projet_df, paste0(data_path, "dos_projet_df.RDS"))
+
 saveRDS(dos_partenaire_df, paste0(data_path, "dos_partenaire_df.RDS"))
 ```
 
@@ -105,6 +107,7 @@ library("genderdata")
 
 ##cleaning the prenom variable
 
+#accent
 Unaccent <- function(text) {
   text <- gsub("['`^~\"]", " ", text)
   text <- iconv(text, to="ASCII//TRANSLIT//IGNORE")
@@ -112,12 +115,13 @@ Unaccent <- function(text) {
   return(text)
 }
 
+#managing double names
+test <- dos_partenaire_df %>%
+  rename(name = Projet.Partenaire.Responsable_scientifique.Prenom) %>%
+  mutate(name = str_extract(name, "[a-zA-Z]+"))
 
-dos_partenaire_df <- dos_partenaire_df %>%
-  rename(name = Projet.Partenaire.Responsable_scientifique.Prenom) %>% 
-  mutate(name = Unaccent(name))
 
-#detect gender 
+#detect gender
   
 name <- as.character(dos_partenaire_df$name)
 gender_df <- gender(name) 
