@@ -2,7 +2,7 @@
 
 The dataset is an open-data one : <a href="https://www.data.gouv.fr/en/datasets/anr-01-projets-anr-dos-detail-des-projets-et-des-partenaires/"> ANR_01 Projets ANR DOS: détail des projets et des partenaires </a>
 
-ANR is the French institution which allocates funds to French research projects. This dataset contains the 15 k research projects that were financed by ANR since 2011. We are interested in the 2014-2021 period, when the present system, where the anual generic call that represents 3/4 of all the calls (in €) was implemented.
+ANR is the French institution which allocates funds to French research projects. This dataset contains the 15 k research projects that were financed by ANR since 2011. We are interested in the 2014-2021 period, when the present system, with the anual generic call weighting for 3/4 of all the calls (in €) was implemented.
 
 In its <a href="https://anr.fr/fileadmin/aap/2022/aapg-2022-Guide-V1-0.pdf">"Guide de l’AAPG 2022"</a> p.37, ANR gives the list of the different "comités d'évaluation scientifique", which are the evaluation commitees that decide which projects get funded each year in each discipline, from the generic anual call. 
 
