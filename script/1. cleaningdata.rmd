@@ -20,13 +20,13 @@ knitr::opts_chunk$set(echo = TRUE)
 #2 Loading packages, paths and
     data
     
-```{r, echo=FALSE}
+```{r, echo=FALSE results = "hide"}
 
 source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
 
 ```
 
-```{r}
+```{r, results = "hide"}
 
 file.list <- paste0(data_path, list.files(path = data_path, pattern='*.xlsx'))
 df.list <- lapply(file.list, read_excel)
@@ -43,7 +43,7 @@ discipline_code_df <- df.list[[5]]
 
 ##3.1 Filter general call & create a discipline variable 
 
-```{r echo=FALSE}
+```{r echo=FALSE results = "hide"}
 dos_projet_df <- dos_projet_df %>%
   mutate(CES = str_extract(Projet.Code_Decision_ANR, "CE[:digit:]{2}")) %>% left_join(discipline_code_df, by = 'CES') %>%
   mutate(generique = case_when(str_detect(Programme.Acronyme, "^AAPG") ~ 1, 
@@ -102,14 +102,34 @@ for (i in (1:nrow(dos_partenaire_df))){
 library("gender")
 library("genderdata")
 
-name <- dos_partenaire_df$Projet.Partenaire.Responsable_scientifique.Prenom
 
-gender_df <- gender(Projet.Partenaire.Responsable_scientifique.Prenom, years = c(1950,1990))
+##cleaning the prenom variable
+
+Unaccent <- function(text) {
+  text <- gsub("['`^~\"]", " ", text)
+  text <- iconv(text, to="ASCII//TRANSLIT//IGNORE")
+  text <- gsub("['`^~\"]", "", text)
+  return(text)
+}
+
 
 dos_partenaire_df <- dos_partenaire_df %>%
-  rename(name = Projet.Partenaire.Responsable_scientifique.Prenom) %>%
+  rename(name = Projet.Partenaire.Responsable_scientifique.Prenom) %>% 
+  mutate(name = Unaccent(name))
+
+#detect gender 
+  
+name <- as.character(dos_partenaire_df$name)
+gender_df <- gender(name) 
+
+df_name <- as.data.frame(name) 
+
+test <- dos_partenaire_df %>%
   left_join(select(gender_df, c(name, gender))) %>%
-  distinct()
+  distinct() %>% 
+  filter(is.na(gender)) %>%
+  select(gender, name)
+  
 
 test <- dos_partenaire_df %>%
   count(is.na(gender))

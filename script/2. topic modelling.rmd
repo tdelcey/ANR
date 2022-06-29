@@ -26,7 +26,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
 
-?list.files
 
 file.list <- paste0(data_path, list.files(path = data_path, pattern='*.xlsx'))
 df.list <- lapply(file.list, read_excel)
@@ -36,6 +35,8 @@ dgpie_projet_df <- df.list[[2]]
 dos_partenaire_df <- df.list[[3]]
 dos_projet_df <- df.list[[4]]
 discipline_code_df <- df.list[[5]]
+
+dos_partenaire_df <- readRDS(paste0(data_path, "dos_partenaire_df.RDS"))
 
 ```
 
@@ -90,7 +91,7 @@ determine_k <- FindTopicsNumber(
 library(topicmodels)
 library(broom)
 
-summary_dtm_k13 <- LDA(summary_dtm, k = 20, control = list(seed = 77))
+summary_dtm_k13 <- LDA(summary_dtm, k = 13, control = list(seed = 77))
 saveRDS(summary_dtm_k13, pasteO(data_path, "summary_dtm_k13"))
 
 summary_dtm_k13 <- readRDS(paste0(data_path, "summary_dtm_k13"))
