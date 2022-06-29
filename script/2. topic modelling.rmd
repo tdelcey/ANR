@@ -11,6 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 -   [1 What is this script for?](#what-is-this-script-for)
 -   [2 Loading packages, paths and data](#loading-packages-paths-and-data)
+- [3 Featurization](#Featurization)
+- [4 DTM](#DTM)
+- [5 Finding k](#Finding k)
+- [6 Topic Model](#Topic Model)
 
 # 1 What is this script for?
 
@@ -80,7 +84,7 @@ determine_k <- FindTopicsNumber(
    verbose = TRUE
  )
 ```
-
+#Topic Model
 ```{r}
 library(topicmodels)
 library(broom)
