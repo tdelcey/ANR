@@ -55,27 +55,9 @@ dos_projet_df <- dos_projet_df %>%
                               )
         )
 
-dos_projet_df %>%
-  group_by(CES) %>%
-  summarise(n = n(),
-            grant = sum(Projet.Aide_allouee)) %>%
-  mutate(freq = n / sum(n)*100)
-
+saveRDS(dos_partenaire_df, paste0(data_path, "dos_partenaire_df.RDS"))
 ```
 
-Find the social science code  
-
-```{r}
-  test <- dos_projet_df %>%
-  filter(!is.na(CES)) 
-
-test <- test %>%
-  mutate(social_science = case_when(str_detect(test$CES, "CE(26|27|28|41)") ~ "SSH",
-                                    TRUE ~ "NO SSH"
-    )) %>%
-  group_by(social_science) %>%
-  count()
-```
 
 
 ## 3.2 Institution 
