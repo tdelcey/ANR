@@ -9,6 +9,8 @@ ANR is the French institution which allocates funds to French research projects.
 
 In its <a href="https://anr.fr/fileadmin/aap/2022/aapg-2022-Guide-V1-0.pdf">"Guide de l’AAPG 2022"</a> p.37, ANR gives the list of the different "comités d'évaluation scientifique", which are the evaluation commitees that decide which projects get funded each year in each discipline, from the generic anual call. 
 
+**Who gets funding**
+
 Here is an example of <a href="https://public.tableau.com/views/ANR_SHS/SHS_dans_le_total?:language=fr-FR&publish=yes&:display_count=n&:origin=viz_share_link">where social sciences lie within the global ANR generic call</a>
 
 While looking at the amount of money given to research projects, we looked how the funding evolving through the years according to :
