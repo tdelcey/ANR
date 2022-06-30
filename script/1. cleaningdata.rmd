@@ -157,9 +157,6 @@ dos_partenaire_df %>%
   summarise(n = n()) %>%
   mutate('%' = n/sum(n)*100)
 
-dos_partenaire_df <- dos_partenaire_df %>%
-  rename(id = Projet.Code_Decision_ANR)
-
 
 saveRDS(dos_partenaire_df, paste0(data_path, "dos_partenaire_df.RDS")) 
 
@@ -167,13 +164,13 @@ saveRDS(dos_partenaire_df, paste0(data_path, "dos_partenaire_df.RDS"))
 dos_projet_df <- readRDS(paste0(data_path, "dos_projet_df.RDS"))
 
 dos_projet_df_g <- dos_projet_df %>%
-  select(year, id, Projet.Aide_allouee, CES, category) %>%
+  select(year, id, Projet.Aide_allouee, CES, Category) %>%
   left_join(select(dos_partenaire_df, c(id, gender))) %>%
-  filter(!is.na(category)) %>%
+  filter(!is.na(Category)) %>%
   filter(!is.na(gender))
 
 gender_by_category <- dos_projet_df_g %>%
-  count(year, gender, category)
+  count(year, gender, Category)
 
 gender_by_CES <- dos_projet_df_g %>%
   count(year, gender, CES)

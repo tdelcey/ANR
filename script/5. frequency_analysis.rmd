@@ -1,0 +1,121 @@
+---
+title: "STM"
+author: "Thomas Delcey"
+date: '2022-06-27'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+- [1 What is this script for?](#what-is-this-script-for)
+- [2 Loading packages, paths and data](#loading-packages-paths-and-data)
+- [3 Featurization](#Featurization)
+- [4 DTM](#DTM)
+- [5 Finding k](#Finding k)
+- [6 Topic Model](#Topic Model)
+
+# 1 What is this script for?
+
+
+# 2 Loading packages, paths and
+    data
+    
+```{r, message=FALSE warning=FALSE}
+source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
+
+dos_projet_df <- readRDS(paste0(data_path, "dos_projet_df.RDS"))
+```
+
+
+```{r, message=FALSE}
+#keep relevant variable
+
+project <- dos_projet_df %>%
+  select(CES, text, id, year,`Comité d'évaluation scientifique`, category) %>%
+  rename(CES_label = `Comité d'évaluation scientifique`) %>%
+  filter(!is.na(CES))
+  
+```
+
+```{r}
+token <- project %>%
+   unnest_tokens(output = token, input = text)
+```
+
+TF-IDF BY CES
+```{r}
+
+CES_words <- token %>% 
+  count(CES, token, sort = TRUE) 
+
+total_words <- CES_words %>% group_by(CES) %>% summarize(total = sum(n))
+CES_words <- left_join(CES_words, total_words)
+
+td_idf_20_CES <- CES_words %>% 
+  bind_tf_idf(token, CES, n) %>%
+  group_by(CES) %>%
+  slice_max(tf_idf, n = 5)
+
+td_idf_20_CES %>%
+   mutate(CES = factor(CES),
+          token = reorder_within(token, tf_idf, CES)) %>%
+   ggplot(aes(token, tf_idf, fill = CES)) +
+   geom_bar(stat = "identity", show.legend = FALSE) +
+   scale_x_reordered() +
+   facet_wrap(~CES, scales = "free", ncol = 4) +
+   coord_flip()
+  
+```
+
+TF-IDF BY category
+```{r}
+
+CAT_words <- token %>% 
+  count(CAT, token, sort = TRUE) 
+
+total_words <- CAT_words %>% group_by(CAT) %>% summarize(total = sum(n))
+CAT_words <- left_join(CAT_words, total_words)
+
+td_idf_20_CAT <- CAT_words %>% 
+  bind_tf_idf(token, CAT, n) %>%
+  group_by(CAT) %>%
+  slice_max(tf_idf, n = 20)
+
+td_idf_20_CAT %>%
+   #mutate(topic = factor(topic),
+          #term = reorder_within(term, beta, topic)) %>%
+   ggplot(aes(token, n, fill = CAT)) +
+   geom_bar(stat = "identity", show.legend = FALSE) +
+   scale_x_reordered() +
+   facet_wrap(~topic, scales = "free", ncol = 4) +
+   coord_flip()
+  
+```
+
+
+## BIG DATA 
+
+```{r}
+projet <- dos_projet_df %>%
+  select(CES, text, id, year, category,`Comité d'évaluation scientifique`) %>%
+  filter(!is.na(text)) 
+
+
+#bigram 
+
+big_data_freq <- projet %>%
+     unnest_tokens(output = token, input = text, token = "ngrams", n = 2) %>%
+     anti_join(get_stopwords(), by = c("token" = "word"))# stop word
+     mutate(big_data = ifelse(str_detect(token, "[Bb]ig [Dd]ata"), 1, 0)) %>%
+    count(year, big_data) %>%
+  mutate(freq = n/sum(n)/100)
+  
+big_data_freq %>%
+  ggplot(aes(year, freq)) +
+  geom_line()
+  
+  
+```
+
