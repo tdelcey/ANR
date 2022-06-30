@@ -97,20 +97,20 @@ library(broom)
 summary_dtm_k52 <- LDA(summary_dtm, k = 52, control = list(seed = 77))
 saveRDS(summary_dtm_k52, paste0(data_path, "summary_dtm_k52"))
 
-summary_dtm_k20 <- readRDS(paste0(data_path, "summary_dtm_k20"))
+summary_dtm_k52 <- readRDS(paste0(data_path, "summary_dtm_k52"))
 
-summary_dtm_k20_tidied <- tidy(summary_dtm_k20)
+summary_dtm_k52_tidied <- tidy(summary_dtm_k52)
 
 #write_rds(sotu_lda_k16, "lda_16.rds")
-summary_dtm_k20_tidied %>% glimpse()
+summary_dtm_k52_tidied %>% glimpse()
 
-top_terms_k20 <- summary_dtm_k20_tidied %>%
+top_terms_k52 <- summary_dtm_k52_tidied %>%
    group_by(topic) %>%
    slice_max(beta, n = 10, with_ties = FALSE) %>%
    ungroup() %>%
    arrange(topic, -beta)
 
-tp_k20 <- top_terms_k20 %>%
+tp_k52 <- top_terms_k52 %>%
    mutate(topic = factor(topic),
           term = reorder_within(term, beta, topic)) %>%
    ggplot(aes(term, beta, fill = topic)) +
@@ -119,6 +119,6 @@ tp_k20 <- top_terms_k20 %>%
    facet_wrap(~topic, scales = "free", ncol = 4) +
    coord_flip()
 
-ggsave("tp_k20.png", device = "png", plot = tp_k20, path = data_path)
+ggsave("tp_k52.png", device = "png", plot = tp_k52, path = data_path)
 
 ```
