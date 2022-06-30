@@ -19,6 +19,16 @@ While looking at the amount of money given to research projects, we looked how t
 
 - and within social sciences, <a href="https://public.tableau.com/app/profile/aef.data.sup.recherche/viz/ANR_SHS_et_detail_SHS/SHS_per_CES_?publish=yes">the detail per CES</a>
 
+**Gender**
+
+We looked at 
+
+- the gender of the funded researchers <a href="https://public.tableau.com/app/profile/aef.data.sup.recherche/viz/gender_per_year/gender_per_year?publish=yes"> per year </a> (women weight 1/3 basically)
+
+- the gender of the funded researchers <a href="https://public.tableau.com/app/profile/aef.data.sup.recherche/viz/gender_per_category/gender_by_category?publish=yes"> per disciplin </a> (it varies from medecine to maths)
+
+- and realized that <a href="https://public.tableau.com/app/profile/aef.data.sup.recherche/viz/ANR__per_gender/_per_year_?publish=yes"> 2018 is the only year when women got a bigger average funding than men</a> (!)
+
 RESEARCH QUESTIONS
 
 1) To what extent is social sciences research captured in the global ANR funding call?
