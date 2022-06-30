@@ -152,16 +152,43 @@ dos_partenaire_df <- dos_partenaire_df %>%
   left_join(select(gender_df, c(name, gender))) %>%
   distinct()
 
-
-
 dos_partenaire_df %>%
   group_by(gender) %>%
   summarise(n = n()) %>%
   mutate('%' = n/sum(n)*100)
 
+dos_partenaire_df <- dos_partenaire_df %>%
+  rename(id = Projet.Code_Decision_ANR)
 
 
-saveRDS(dos_partenaire_df, paste0(data_path, "dos_partenaire_df.RDS"))
+saveRDS(dos_partenaire_df, paste0(data_path, "dos_partenaire_df.RDS")) 
+
+
+dos_projet_df <- readRDS(paste0(data_path, "dos_projet_df.RDS"))
+
+dos_projet_df_g <- dos_projet_df %>%
+  select(year, id, Projet.Aide_allouee, CES, category) %>%
+  left_join(select(dos_partenaire_df, c(id, gender))) %>%
+  filter(!is.na(category)) %>%
+  filter(!is.na(gender))
+
+gender_by_category <- dos_projet_df_g %>%
+  count(year, gender, category)
+
+gender_by_CES <- dos_projet_df_g %>%
+  count(year, gender, CES)
+
+gender_by_year <- dos_projet_df_g %>%
+  count(year, gender)
+
+gender_by_grant <- dos_projet_df_g %>%
+  group_by(year, gender) %>%
+  summarise(grant = sum(Projet.Aide_allouee))
+
+saveRDS(gender_by_category, paste0(data_path, "gender_by_category.RDS"))
+saveRDS(gender_by_CES, paste0(data_path, "gender_by_CES.RDS"))
+saveRDS(gender_by_year, paste0(data_path, "gender_by_year.RDS"))
+saveRDS(gender_by_grant, paste0(data_path, "gender_by_grant.RDS"))
 
 ```
 
