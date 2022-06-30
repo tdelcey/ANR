@@ -29,31 +29,62 @@ source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
 ```{r}
 
 dos_partenaire_df <- readRDS(paste0(data_path, "dos_partenaire_df.RDS"))
+dos_projet_df <- readRDS(paste0(data_path, "dos_projet_df.RDS"))
+
 
 ```
 
 #3 Frequency 
 
 ```{r}
+library(data.table)
 
-dos_project_freq_df <- dos_projet_df %>%
-  group_by(CES) %>% # I group the data by their CES category, every function I am gonna use will apply by group
-  summarise(n = n(), #I count the number of lines by group
-            grant = sum(Projet.Aide_allouee, 
-                        ) ) %>% #I sum the fund received by group
-  mutate(freq = n / sum(n)*100,
-         freq_grant = grant / sum(grant)*100
-         ) %>%
-  group_by(social_science) %>%
-  bind_rows(summarise(., 
-                      across(where(is.numeric), sum),
-                      across(where(is.character), ~"Total", .groups = "keep")))
-  #I calculate the percentage of ANR and fund by CES
-  bind_rows(summarise(.,
-                      across(where(is.numeric), sum),
-                      across(where(is.character), ~"Total")))
+# Adding an social_science column, value SSH designating the 4 disciplines that concern social sciences
+Table_ANR_projets <- dos_projet_df
 
+Table_AAPG <- Table_ANR_projets %>%
+  filter(!is.na(CES)) 
 
+# Let's count the SHS and non SHS projects just to have an idea
+SHS_count <- Table_AAPG %>% group_by(social_science) %>%
+  count()
+
+# Getting rid of spaces and accent in the Table_AAPG CES description variable
+colnames(Table_AAPG)[12]<-"Comite_evaluation_scientifique"    
+
+# Our Projet.Aide_alloue is character and has comas instead of dots, let's transform it into numeric
+Table_AAPG$Projet.Aide_allouee <- as.numeric(gsub(",", ".",Table_AAPG$Projet.Aide_allouee))
+
+# Now let's summarize the number of projects financed and amount of money given per year and per CES
+# Let's also add a total of projects and amount of money given columns, in order to compute percentages in the dataviz
+# Data.table style
+Table_CES_per_year_data_table = Table_AAPG[,.(Aide_Projets=sum(Projet.Aide_allouee),                                           Nb_Projets=length(unique(Projet.Code_Decision_ANR))),
+                                           by=.(CES,Comite_evaluation_scientifique,AAP.Edition)]
+
+Table_CES_per_year_data_table[,Aide_Projets_totale:=sum(Aide_Projets),by=year]
+Table_CES_per_year_data_table[,Nb_Projets_total:=sum(Nb_Projets),by=year]
+
+# R base style
+Nb_projets=aggregate(Table_AAPG$Projet.Code_Decision_ANR, by=list(Table_AAPG$CES,Table_AAPG$AAP.Edition), FUN=length)
+Aide_projets=aggregate(Table_AAPG$Projet.Aide_allouee, by=list(Table_AAPG$CES,Table_AAPG$AAP.Edition), FUN=sum)
+
+# Tidyverse style
+Table_per_year_tydiverse <-Table_AAPG %>%
+group_by(AAP.Edition) %>%
+summarize(aide_total_by_year = sum(Projet.Aide_allouee),
+		  nombre_projets_by_year = n(),
+		  .groups = "keep")
+
+Table_CES_per_year_tydiverse <-Table_AAPG %>%
+group_by(CES, Comite_evaluation_scientifique, AAP.Edition) %>%
+summarize(aide_total = sum(Projet.Aide_allouee),
+		  nombre_projets = n(),
+		  .groups = "keep")%>%
+			left_join(Table_per_year_tydiverse)
+
+# Let's expot it in a csv
+write.csv2(as.data.frame(Table_ANR_projets),file='Table_ANR_projets.csv',fileEncoding = "UTF8")
+write.csv2(as.data.frame(Table_CES_per_year_tydiverse),file='Aide_projets_par_CES_et_annee.csv',fileEncoding = "UTF8")
 ```
 
 

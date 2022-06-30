@@ -19,7 +19,9 @@ package_list <- c("here", # building clearer paths
                   "networkflow", 
                   "ggplot2", 
                   "readxl", 
-                  "gender")
+                  "gender", 
+                  "upstartr")
+
 
 for (p in package_list) {
   if (p %in% installed.packages() == FALSE) {

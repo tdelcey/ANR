@@ -22,21 +22,12 @@ knitr::opts_chunk$set(echo = TRUE)
 # 2 Loading packages, paths and
     data
     
-```{r}
+```{r, message=FALSE, echo=FALSE}
 
 source("C:/Users/thomd/Documents/MEGA/github/ANR/script/0_paths_and_packages.R")
 
-
-file.list <- paste0(data_path, list.files(path = data_path, pattern='*.xlsx'))
-df.list <- lapply(file.list, read_excel)
-
-dgpie_partenaire_df <- df.list[[1]]
-dgpie_projet_df <- df.list[[2]]
-dos_partenaire_df <- df.list[[3]]
-dos_projet_df <- df.list[[4]]
-discipline_code_df <- df.list[[5]]
-
 dos_partenaire_df <- readRDS(paste0(data_path, "dos_partenaire_df.RDS"))
+dos_projet_df <- readRDS(paste0(data_path, "dos_projet_df.RDS"))
 
 ```
 
@@ -47,17 +38,24 @@ library(tidytext)
 library(SnowballC) 
 library(ldatuning)
 
-
+library("textcat")
 
 summary <- dos_projet_df %>%
-   filter(!is.na(Projet.Resume.Anglais)) %>% #filter projet with an english summary
-   select(c(Projet.Code_Decision_ANR, Projet.Resume.Anglais, AAP.Edition)) %>%
-   rename(text = Projet.Resume.Anglais,
-          id = Projet.Code_Decision_ANR,
-          year = AAP.Edition) %>% #renames variables 
+   filter(!is.na(text)) %>% #filter projet with an english summary
+   select(c(id, text, year)) %>% #renames variables 
    unnest_tokens(output = token, input = text) %>%
-  anti_join(get_stopwords(), by = c("token" = "word")) %>% # stop word
-  mutate(token = wordStem(token, language = "en")) #stemming
+   anti_join(get_stopwords(), by = c("token" = "word")) %>% # stop word
+   anti_join(get_stopwords(language = "fr"), by = c("token" = "word")) %>% # stop word
+   mutate(token = wordStem(token, language = "en")) #stemming
+
+
+
+library(qdapDictionaries)
+
+is.word  <- function(x) x %in% GradyAugmented # or use any dataset from package
+
+#use this function to filter words, df = dataframe from corpus
+summary <- summary[which(is.word(summary$token)),]
 ```
 
 #3 DTM 
@@ -67,8 +65,8 @@ summary_dtm <- summary %>%
    filter(str_length(token) > 1) %>% 
    count(id, year, token) %>% 
    group_by(token) %>% 
-   #filter(n() < 95) %>% # remove tokens that appear in more than 95 documents (i.e., years) WHY ?
-   cast_dtm(document = year, term = token, value = n)
+   #filter(n() < ) %>% # remove tokens that appear in more than X documents (i.e., years) 
+   cast_dtm(document = id, term = token, value = n)
 ```
 
 #4 Finding k
@@ -78,7 +76,7 @@ library(ldatuning)
 
 determine_k <- FindTopicsNumber(
    summary_dtm,
-   topics = seq(from = 2, to = 30, by = 1),
+   topics = seq(from = 2, to = 60, by = 5),
    metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
    method = "Gibbs",
    control = list(seed = 77),
@@ -86,30 +84,33 @@ determine_k <- FindTopicsNumber(
    verbose = TRUE
  )
 ```
+```{r}
+FindTopicsNumber_plot(determine_k)
+```
+
 
 #5 Topic Model
 ```{r}
 library(topicmodels)
 library(broom)
 
-summary_dtm_k13 <- LDA(summary_dtm, k = 13, control = list(seed = 77))
-saveRDS(summary_dtm_k13, pasteO(data_path, "summary_dtm_k13"))
+summary_dtm_k52 <- LDA(summary_dtm, k = 52, control = list(seed = 77))
+saveRDS(summary_dtm_k52, paste0(data_path, "summary_dtm_k52"))
 
-summary_dtm_k13 <- readRDS(paste0(data_path, "summary_dtm_k13"))
+summary_dtm_k20 <- readRDS(paste0(data_path, "summary_dtm_k20"))
 
-summary_dtm_k13_tidied <- tidy(summary_dtm_k13)
+summary_dtm_k20_tidied <- tidy(summary_dtm_k20)
 
-saveRDS(pasteO(data_path, "summary_dtm_k13"))
 #write_rds(sotu_lda_k16, "lda_16.rds")
-summary_dtm_k13_tidied %>% glimpse()
+summary_dtm_k20_tidied %>% glimpse()
 
-top_terms_k13 <- summary_dtm_k13_tidied %>%
+top_terms_k20 <- summary_dtm_k20_tidied %>%
    group_by(topic) %>%
    slice_max(beta, n = 10, with_ties = FALSE) %>%
    ungroup() %>%
    arrange(topic, -beta)
 
-top_terms_k13 %>%
+tp_k20 <- top_terms_k20 %>%
    mutate(topic = factor(topic),
           term = reorder_within(term, beta, topic)) %>%
    ggplot(aes(term, beta, fill = topic)) +
@@ -118,4 +119,6 @@ top_terms_k13 %>%
    facet_wrap(~topic, scales = "free", ncol = 4) +
    coord_flip()
 
- ```
+ggsave("tp_k20.png", device = "png", plot = tp_k20, path = data_path)
+
+```

@@ -21,7 +21,7 @@ Table_ANR_projets <- Table_ANR_projets %>%
   mutate(CES = str_extract(Projet.Code_Decision_ANR, "CE[:digit:]{2}")) %>%
   left_join(Discipline_code, by = 'CES') 
 
-# Adding an social_science column, value SSH designating the 4 disciplins that concern social sciences
+# Adding an social_science column, value SSH designating the 4 disciplines that concern social sciences
 Table_AAPG <- Table_ANR_projets %>%
   filter(!is.na(CES)) 
 Table_AAPG <- Table_AAPG %>%

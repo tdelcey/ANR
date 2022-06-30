@@ -72,7 +72,6 @@ dos_projet_df <- dos_projet_df %>%
 
 saveRDS(dos_projet_df, paste0(data_path, "dos_projet_df.RDS"))
 
-saveRDS(dos_partenaire_df, paste0(data_path, "dos_partenaire_df.RDS"))
 ```
 
 
@@ -151,14 +150,19 @@ gender_df <- gender(name)
 
 dos_partenaire_df <- dos_partenaire_df %>%
   left_join(select(gender_df, c(name, gender))) %>%
-  distinct() 
+  distinct()
+
+
 
 dos_partenaire_df %>%
   group_by(gender) %>%
   summarise(n = n()) %>%
   mutate('%' = n/sum(n)*100)
 
- 
+
+
+saveRDS(dos_partenaire_df, paste0(data_path, "dos_partenaire_df.RDS"))
+
 ```
 
 
